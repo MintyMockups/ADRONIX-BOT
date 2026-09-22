@@ -1,0 +1,12 @@
+{
+  "name": "adronix-records-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.100.0"
+  }
+}

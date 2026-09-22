@@ -1,0 +1,7 @@
+name = "adronix-records-bot"
+main = "src/index.js"
+compatibility_date = "2026-06-13"
+
+# Non-secret environment variables can go here
+[vars]
+# Optional default configurations

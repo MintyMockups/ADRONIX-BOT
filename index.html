@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ADRONIX RECORDS</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Exo+2:ital,wght@0,100;0,300;0,400;0,600;1,300&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --nebula-deep: #050510;
+    --nebula-dark: #0a0820;
+    --nebula-purple: #2d1b69;
+    --nebula-violet: #6b21d4;
+    --nebula-magenta: #c026d3;
+    --nebula-pink: #f0abfc;
+    --nebula-cyan: #22d3ee;
+    --text-primary: #f0e6ff;
+    --text-secondary: #a78bfa;
+    --text-muted: #6b7280;
+    --glow-purple: 0 0 30px rgba(107,33,212,0.6), 0 0 60px rgba(192,38,211,0.3);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--nebula-deep); color: var(--text-primary); font-family: 'Rajdhani', sans-serif; font-size: 16px; overflow-x: hidden; cursor: default; }
+
+  /* Canvas */
+  #nebula-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--nebula-deep); }
+  ::-webkit-scrollbar-thumb { background: var(--nebula-violet); border-radius: 2px; }
+
+  /* Page Setup */
+  .page { display: none; position: relative; z-index: 1; min-height: 100vh; padding-bottom: 50px; }
+  .page.active { display: block; animation: fadeIn 0.4s ease forwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Navbar */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; height: 70px; background: linear-gradient(180deg, rgba(5,5,16,0.95) 0%, rgba(5,5,16,0) 100%); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(107,33,212,0.2); transition: all 0.3s ease; }
+  nav.scrolled { background: rgba(5,5,16,0.98); border-bottom-color: rgba(107,33,212,0.5); }
+  
+  .nav-logo-container { display: flex; align-items: center; cursor: pointer; }
+  .nav-logo-img { max-height: 45px; display: none; filter: drop-shadow(0 0 10px rgba(34,211,238,0.4)); }
+  .nav-logo-text { font-family: 'Orbitron', sans-serif; font-size: 1.3rem; font-weight: 900; letter-spacing: 4px; background: linear-gradient(135deg, var(--nebula-cyan), var(--nebula-violet), var(--nebula-magenta)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  
+  .nav-links { display: flex; gap: 6px; align-items: center; }
+  .nav-links a { font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-secondary); text-decoration: none; padding: 6px 12px; border-radius: 4px; transition: all 0.2s ease; cursor: pointer; border: 1px solid transparent; }
+  .nav-links a:hover, .nav-links a.active { color: var(--nebula-cyan); border-color: rgba(34,211,238,0.3); background: rgba(34,211,238,0.05); }
+  .nav-submit-btn { background: linear-gradient(135deg, var(--nebula-violet), var(--nebula-magenta)); color: white !important; padding: 8px 18px !important; border-radius: 4px !important; box-shadow: var(--glow-purple); }
+  
+  .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+  .hamburger span { width: 24px; height: 2px; background: var(--text-secondary); transition: all 0.3s; }
+
+  /* Reusable Elements */
+  .section { padding: 120px 80px 40px; position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; }
+  .section-header { text-align: center; margin-bottom: 70px; }
+  .section-label { font-family: 'Exo 2', sans-serif; font-size: 0.65rem; letter-spacing: 8px; text-transform: uppercase; color: var(--nebula-cyan); margin-bottom: 12px; display: block; }
+  .section-title { font-family: 'Orbitron', sans-serif; font-size: clamp(1.8rem, 4vw, 3.5rem); font-weight: 900; letter-spacing: 4px; background: linear-gradient(135deg, #fff, var(--nebula-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1; }
+  .section-divider { width: 80px; height: 2px; background: linear-gradient(90deg, transparent, var(--nebula-violet), var(--nebula-magenta), transparent); margin: 20px auto 0; }
+  
+  .btn-primary { padding: 14px 36px; background: linear-gradient(135deg, var(--nebula-violet), var(--nebula-magenta)); color: white; border: none; border-radius: 2px; font-family: 'Orbitron', sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; transition: all 0.3s ease; box-shadow: var(--glow-purple); clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%); }
+  .btn-primary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 0 50px rgba(192,38,211,0.8); }
+
+  /* Hero */
+  #home { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; overflow: hidden; }
+  .hero-content { position: relative; z-index: 2; padding: 0 20px; }
+  .hero-eyebrow { font-family: 'Exo 2', sans-serif; font-size: 0.7rem; letter-spacing: 8px; text-transform: uppercase; color: var(--nebula-cyan); margin-bottom: 20px; }
+  .hero-title { font-family: 'Orbitron', sans-serif; font-size: clamp(3rem, 10vw, 8rem); font-weight: 900; line-height: 0.9; letter-spacing: 8px; background: linear-gradient(135deg, #fff 0%, var(--nebula-pink) 30%, var(--nebula-violet) 60%, var(--nebula-cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 40px rgba(192,38,211,0.4)); }
+  .hero-subtitle { font-family: 'Exo 2', sans-serif; font-size: clamp(0.8rem, 2vw, 1.1rem); letter-spacing: 6px; text-transform: uppercase; color: var(--text-secondary); margin-top: 12px; margin-bottom: 50px; font-weight: 300; font-style: italic; }
+
+  /* Grids */
+  .about-grid, .contact-grid, .demo-body { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; max-width: 1100px; margin: 0 auto; }
+  .demo-body { grid-template-columns: 1.2fr 0.8fr; }
+  .artists-grid, .catalogue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 28px; max-width: 1200px; margin: 0 auto; }
+  
+  /* Cards */
+  .stat-card { background: rgba(107,33,212,0.1); border: 1px solid rgba(107,33,212,0.3); border-radius: 8px; padding: 28px 24px; text-align: center; }
+  .stat-num { font-family: 'Orbitron', sans-serif; font-size: 2.5rem; font-weight: 900; background: linear-gradient(135deg, var(--nebula-cyan), var(--nebula-violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat-label { font-size: 0.75rem; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; margin-top: 6px; }
+
+  .artist-card, .release-card { background: rgba(10,8,32,0.9); border: 1px solid rgba(107,33,212,0.2); border-radius: 12px; overflow: hidden; transition: all 0.4s ease; text-decoration: none; display: flex; flex-direction: column; }
+  .artist-card:hover, .release-card:hover { transform: translateY(-8px); border-color: var(--nebula-magenta); box-shadow: 0 20px 60px rgba(192,38,211,0.25); }
+  .artist-img, .release-art { width: 100%; aspect-ratio: 1; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; position: relative; }
+  .artist-info, .release-info { padding: 20px 24px; flex-grow: 1; }
+  .artist-name, .release-title { font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  
+  /* Empty States */
+  .empty-state { text-align: center; padding: 60px 20px; width: 100%; grid-column: 1 / -1; }
+  .empty-state h3 { font-family: 'Orbitron', sans-serif; color: var(--text-secondary); font-size: 1.5rem; letter-spacing: 2px; }
+
+  /* Forms */
+  .form-panel { background: rgba(10,8,32,0.8); border: 1px solid rgba(107,33,212,0.3); border-radius: 16px; padding: 44px; }
+  .form-group { margin-bottom: 22px; }
+  .form-group label { display: block; font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: var(--nebula-cyan); margin-bottom: 8px; font-weight: 600; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 16px; background: rgba(107,33,212,0.1); border: 1px solid rgba(107,33,212,0.3); border-radius: 4px; color: var(--text-primary); font-family: 'Rajdhani', sans-serif; font-size: 0.95rem; outline: none; }
+  .form-group input:focus, .form-group textarea:focus { border-color: var(--nebula-cyan); background: rgba(34,211,238,0.05); }
+  .form-submit-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--nebula-violet), var(--nebula-magenta)); color: white; border: none; border-radius: 4px; font-family: 'Orbitron', sans-serif; font-weight: 700; letter-spacing: 4px; cursor: pointer; transition: all 0.3s ease; box-shadow: var(--glow-purple); }
+
+  /* Discord Modal */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5,5,16,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(5px); }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .modal-box { background: rgba(10,8,32,1); border: 2px solid var(--nebula-magenta); border-radius: 16px; padding: 50px; max-width: 500px; width: 90%; text-align: center; box-shadow: var(--glow-purple); transform: translateY(20px); transition: transform 0.3s ease; }
+  .modal-overlay.active .modal-box { transform: translateY(0); }
+  .code-display { font-family: 'Orbitron', sans-serif; font-size: 2.5rem; letter-spacing: 8px; color: var(--nebula-cyan); background: rgba(34,211,238,0.1); padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px dashed var(--nebula-cyan); user-select: all; word-break: break-all; }
+
+  /* Legal Pages */
+  .legal-content { max-width: 800px; margin: 0 auto; padding: 0 20px; line-height: 1.8; color: rgba(240,230,255,0.8); }
+  .legal-content h3 { font-family: 'Orbitron', sans-serif; color: var(--nebula-cyan); margin: 30px 0 10px; font-size: 1.2rem; }
+  .legal-content p { margin-bottom: 15px; }
+
+  /* Footer */
+  footer { background: rgba(5,5,16,0.98); border-top: 1px solid rgba(107,33,212,0.2); padding: 60px 80px 30px; position: relative; z-index: 1; }
+  .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; margin-bottom: 50px; max-width: 1400px; margin-left: auto; margin-right: auto; }
+  .footer-col h4 { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; letter-spacing: 3px; color: var(--nebula-cyan); text-transform: uppercase; margin-bottom: 16px; }
+  .footer-col a { display: block; font-size: 0.88rem; color: var(--text-muted); text-decoration: none; margin-bottom: 10px; cursor: pointer; transition: color 0.2s; }
+  .footer-col a:hover { color: var(--nebula-pink); }
+  .footer-bottom { border-top: 1px solid rgba(107,33,212,0.15); padding-top: 24px; display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); max-width: 1400px; margin: 0 auto; }
+
+  /* Notification */
+  .notification { position: fixed; bottom: 30px; right: 30px; z-index: 9999; padding: 16px 28px; border-radius: 8px; background: rgba(10,8,32,0.95); border: 1px solid var(--nebula-magenta); color: white; transform: translateY(80px); opacity: 0; transition: all 0.4s ease; pointer-events: none; }
+  .notification.show { transform: translateY(0); opacity: 1; }
+
+  /* Responsive Mobile */
+  @media (max-width: 900px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 70px; left: 0; right: 0; background: rgba(5,5,16,0.98); padding: 20px; border-bottom: 1px solid rgba(107,33,212,0.3); z-index: 999; }
+    .nav-links.open a { text-align: center; padding: 15px; width: 100%; border-bottom: 1px solid rgba(107,33,212,0.2); }
+    .nav-links.open a:last-child { border-bottom: none; }
+    .hamburger { display: flex; }
+    .section { padding: 100px 24px 40px; }
+    .about-grid, .contact-grid, .demo-body, .footer-grid { grid-template-columns: 1fr; gap: 40px; }
+    .form-row { grid-template-columns: 1fr !important; }
+    .footer-bottom { flex-direction: column; gap: 10px; text-align: center; }
+    .modal-box { padding: 30px 20px; }
+    .code-display { font-size: 2rem; letter-spacing: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Canvas Background -->
+<canvas id="nebula-bg"></canvas>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <div class="nav-logo-container" onclick="navigate('home')">
+    <img id="dynamic-logo" class="nav-logo-img" src="" alt="Adronix Logo" />
+    <span id="dynamic-logo-text" class="nav-logo-text">ADRONIX</span>
+  </div>
+  <div class="nav-links" id="navLinks">
+    <a onclick="navigate('home')" data-page="home">Home</a>
+    <a onclick="navigate('about')" data-page="about">About</a>
+    <a onclick="navigate('artists')" data-page="artists">Artists</a>
+    <a onclick="navigate('catalogue')" data-page="catalogue">Catalogue</a>
+    <a onclick="navigate('contact')" data-page="contact">Contact</a>
+    <a onclick="navigate('demo')" class="nav-submit-btn" data-page="demo">Submit Demo</a>
+  </div>
+  <div class="hamburger" onclick="toggleNav()" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- ========================================================= -->
+<!-- PAGES START HERE -->
+<!-- ========================================================= -->
+
+<!-- HOME PAGE -->
+<div class="page active" id="page-home">
+  <section id="home">
+    <div class="hero-content">
+      <div class="hero-eyebrow">Established · Mumbai, India · Est. 2026</div>
+      <h1 class="hero-title">ADRONIX<br>RECORDS</h1>
+      <p class="hero-subtitle">Where Cosmic Sounds Are Born</p>
+      <button class="btn-primary" onclick="navigate('demo')" style="margin-top:20px;">Submit Your Demo</button>
+    </div>
+  </section>
+</div>
+
+<!-- ABOUT PAGE -->
+<div class="page" id="page-about">
+  <section class="section">
+    <div class="section-header">
+      <span class="section-label">Our Story</span>
+      <h2 class="section-title">About ADRONIX</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="about-grid">
+      <div class="about-text" style="line-height:1.8; color:rgba(240,230,255,0.8);">
+        <p>ADRONIX RECORDS was founded on a simple belief: <strong style="color:var(--nebula-cyan);">great music doesn't need permission</strong>. Born from the underground, built for the limitless — we are a record label that operates at the intersection of sonic innovation and cultural depth.</p>
+        <br>
+        <p>We are not just a label. We are a creative ecosystem — providing artists with distribution, visual identity, and a community of like-minded collaborators.</p>
+      </div>
+      <div class="about-stats" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;" id="dynamic-stats">
+        <!-- Stats injected via JS Config -->
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ARTISTS PAGE -->
+<div class="page" id="page-artists">
+  <section class="section">
+    <div class="section-header">
+      <span class="section-label">The Constellation</span>
+      <h2 class="section-title">Our Artists</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="artists-grid" id="dynamic-artists">
+      <!-- Artists injected via JS Config -->
+    </div>
+  </section>
+</div>
+
+<!-- CATALOGUE PAGE -->
+<div class="page" id="page-catalogue">
+  <section class="section">
+    <div class="section-header">
+      <span class="section-label">Discography</span>
+      <h2 class="section-title">The Catalogue</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="catalogue-grid" id="dynamic-catalogue">
+      <!-- Catalogue injected via JS Config -->
+    </div>
+  </section>
+</div>
+
+<!-- DEMO PORTAL PAGE -->
+<div class="page" id="page-demo">
+  <section class="section">
+    <div class="section-header">
+      <span class="section-label">Open for Submissions</span>
+      <h2 class="section-title">Submit Your Sound</h2>
+      <div class="section-divider"></div>
+      <p style="margin-top:20px; color:var(--text-secondary);">Submit your original music. We listen to everything.</p>
+    </div>
+    
+    <div class="demo-body">
+      <div class="form-panel">
+        <form id="demo-form" action="https://formspree.io/f/mwvnddda" method="POST">
+          <!-- Hidden input that holds the randomly generated Ticket Code so it gets emailed to you -->
+          <input type="hidden" name="Ticket_Code" id="hidden-ticket-code" value="" />
+          
+          <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div class="form-group">
+              <label>Artist Name *</label>
+              <input type="text" name="artist_name" required/>
+            </div>
+            <div class="form-group">
+              <label>Email Address *</label>
+              <input type="email" name="email" required/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Genre *</label>
+            <input type="text" name="genre" placeholder="e.g., Hip-Hop, Ambient, Electronic" required/>
+          </div>
+          <div class="form-group">
+            <label>SoundCloud / Drive / Unreleased Link *</label>
+            <input type="url" name="streaming_link" placeholder="https://soundcloud.com/... or https://drive.google.com/..." required/>
+          </div>
+          <div class="form-group">
+            <label>Artist Biography *</label>
+            <textarea name="biography" style="min-height:100px;" placeholder="Tell us about yourself and your sound..." required></textarea>
+          </div>
+          <button type="submit" class="form-submit-btn" id="demo-submit-btn">TRANSMIT DEMO →</button>
+        </form>
+      </div>
+
+      <div class="form-panel" style="background:rgba(107,33,212,0.1); border-color:var(--nebula-magenta);">
+        <h3 style="color:#fff; font-family:'Orbitron'; margin-bottom:20px;">What Happens Next?</h3>
+        <p style="color:var(--text-muted); line-height:1.6; margin-bottom:15px;">1. You submit the form and receive a unique 8-character verification code.</p>
+        <p style="color:var(--text-muted); line-height:1.6; margin-bottom:15px;">2. You join our Discord server using the prompt that appears.</p>
+        <p style="color:var(--text-muted); line-height:1.6; margin-bottom:15px;">3. Open a Demo Submission Ticket in Discord and paste your code to notify us.</p>
+        <p style="color:var(--text-muted); line-height:1.6;">4. Our A&R team reviews your track and responds directly inside your Discord ticket.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- CONTACT PAGE -->
+<div class="page" id="page-contact">
+  <section class="section">
+    <div class="section-header">
+      <span class="section-label">Reach Out</span>
+      <h2 class="section-title">Contact Us</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="contact-grid">
+      <div style="color:rgba(240,230,255,0.8); line-height:2;">
+        <h3 style="font-family:'Orbitron'; color:var(--nebula-cyan); margin-bottom:20px;">General Inquiries</h3>
+        <p>Email: hello@adronixrecords.com</p>
+        <p>Location: Mumbai, India</p>
+        <p style="margin-top:20px; color:var(--text-secondary);">For demo submissions, please use the <strong>Submit Demo</strong> page to ensure it gets routed to our A&R team properly.</p>
+      </div>
+      <div class="form-panel">
+        <form action="https://formspree.io/f/mwvnddda" method="POST">
+          <div class="form-group"><label>Name</label><input type="text" name="name" required/></div>
+          <div class="form-group"><label>Email</label><input type="email" name="email" required/></div>
+          <div class="form-group"><label>Message</label><textarea name="message" style="min-height:120px;" required></textarea></div>
+          <button type="submit" class="form-submit-btn">SEND MESSAGE</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- PRIVACY POLICY -->
+<div class="page" id="page-privacy">
+  <section class="section"><div class="section-header"><h2 class="section-title">Privacy Policy</h2></div>
+    <div class="legal-content">
+      <p>Last Updated: March 2026</p>
+      <h3>1. Information We Collect</h3>
+      <p>We collect information you provide directly to us when you submit a demo, fill out a contact form, or communicate with us. This may include your name, email address, social media links, and any audio files or documents you upload.</p>
+      <h3>2. How We Use Your Information</h3>
+      <p>We use the information to review your music submissions, respond to your inquiries, and communicate with you regarding potential signings or partnerships.</p>
+      <h3>3. Data Sharing</h3>
+      <p>We do not sell, trade, or rent your personal information to third parties. Your data is strictly used by the Adronix Records A&R and management teams.</p>
+    </div>
+  </section>
+</div>
+
+<!-- TERMS OF USE -->
+<div class="page" id="page-terms">
+  <section class="section"><div class="section-header"><h2 class="section-title">Terms of Use</h2></div>
+    <div class="legal-content">
+      <p>Last Updated: March 2026</p>
+      <h3>1. Demo Submissions</h3>
+      <p>Submitting a demo to Adronix Records does not guarantee a record deal, feedback, or any formal partnership. By submitting, you confirm that the work is entirely your own and does not infringe on any third-party copyrights.</p>
+      <h3>2. Copyright & Ownership</h3>
+      <p>You retain 100% ownership and copyright of your music upon submission. Adronix Records does not claim any rights to your unreleased music just by listening to your submission.</p>
+      <h3>3. Website Usage</h3>
+      <p>You agree to use this website for lawful purposes only and refrain from attempting to disrupt the site’s functionality or submitting malicious files through our upload portals.</p>
+    </div>
+  </section>
+</div>
+
+<!-- FRAUD WARNING -->
+<div class="page" id="page-fraud">
+  <section class="section"><div class="section-header"><h2 class="section-title" style="color:var(--nebula-rose);">Fraud Warning</h2></div>
+    <div class="legal-content">
+      <h3>Official Notice to All Artists</h3>
+      <p>It has come to our attention that scammers often impersonate record label A&Rs online.</p>
+      <p><strong style="color:var(--nebula-magenta);">ADRONIX RECORDS WILL NEVER ASK YOU FOR MONEY.</strong></p>
+      <p>We do not charge fees for demo listening, A&R feedback, signing contracts, or distribution setup. If someone claiming to represent Adronix Records asks you for payment via PayPal, Crypto, CashApp, or any other method, it is a scam.</p>
+      <p>All official communication will only come from our Discord Server or an official <strong>@adronixrecords.com</strong> email address.</p>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <h3 style="font-family:'Orbitron'; color:var(--text-primary); margin-bottom:10px;">ADRONIX RECORDS</h3>
+      <p style="color:var(--text-muted); font-size:0.9rem;">Born from the underground. Built for the limitless.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navigation</h4>
+      <a onclick="navigate('home')">Home</a>
+      <a onclick="navigate('about')">About</a>
+      <a onclick="navigate('artists')">Artists</a>
+      <a onclick="navigate('catalogue')">Catalogue</a>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <a onclick="navigate('privacy')">Privacy Policy</a>
+      <a onclick="navigate('terms')">Terms of Use</a>
+      <a onclick="navigate('fraud')">Fraud Warning</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 ADRONIX RECORDS. All Rights Reserved.</p>
+  </div>
+</footer>
+
+<!-- DISCORD MODAL -->
+<div class="modal-overlay" id="discord-modal">
+  <div class="modal-box">
+    <h2 style="font-family:'Orbitron'; color:#fff; margin-bottom:10px;">DEMO RECEIVED! 🚀</h2>
+    <p style="color:var(--text-secondary); line-height:1.6;">Your track is in our system. To complete your submission and talk to our A&R team, please copy your unique code below:</p>
+    
+    <div class="code-display" id="generated-code">XXXX-XXXX</div>
+    
+    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:25px;">Click the button below to join our Discord. Open a Demo Submission Ticket and paste this exact code there to notify us!</p>
+    
+    <a href="#" id="discord-join-btn" target="_blank" class="btn-primary" style="display:inline-block; text-decoration:none; width:100%; box-sizing:border-box;">JOIN DISCORD SERVER</a>
+    <button onclick="closeModal()" style="margin-top:20px; background:none; border:none; color:var(--text-muted); cursor:pointer; text-decoration:underline;">Close Window</button>
+  </div>
+</div>
+
+<!-- Notification Toast -->
+<div class="notification" id="notification"></div>
+
+<!-- ========================================================= -->
+<!-- 🛑 EDIT YOUR WEBSITE CONTENT HERE 🛑 -->
+<!-- ========================================================= -->
+<script id="site-config">
+const SITE_CONFIG = {
+  
+  // ---------------------------------------------------------
+  // 1. BRANDING & DISCORD LINK
+  // ---------------------------------------------------------
+  logoImageURL: "", 
+  discordServerLink: "https://discord.gg/your-invite-link", 
+  
+  // ---------------------------------------------------------
+  // 2. ABOUT PAGE STATS
+  // ---------------------------------------------------------
+  aboutStats:[
+    { number: "0", label: "Signed Artists" },
+    { number: "0", label: "Releases" },
+    { number: "0", label: "Total Streams" },
+    { number: "0", label: "Discord Members" } 
+  ],
+
+  // ---------------------------------------------------------
+  // 3. ARTISTS PAGE
+  // ---------------------------------------------------------
+  artists:[
+    /* 
+    {
+      name: "ARTIST NAME",
+      genre: "GENRE",
+      bio: "Short artist biography goes here.",
+      image: "https://link-to-your-image.jpg"
+    } 
+    */
+  ],
+
+  // ---------------------------------------------------------
+  // 4. CATALOGUE PAGE (SONG RELEASES)
+  // ---------------------------------------------------------
+  catalogue:[
+    /*
+    {
+      title: "SONG NAME",
+      artist: "ARTIST NAME",
+      link: "https://open.spotify.com/...", 
+      image: "https://link-to-cover-art.jpg"
+    }
+    */
+  ]
+};
+</script>
+
+<!-- ========================================================= -->
+<!-- FUNCTIONALITY ENGINE (DO NOT EDIT UNLESS NEEDED) -->
+<!-- ========================================================= -->
+<script>
+// --- INITIALIZATION ---
+document.addEventListener("DOMContentLoaded", () => {
+  setupBranding();
+  renderStats();
+  renderArtists();
+  renderCatalogue();
+  setupDemoForm();
+  
+  // Load Home page by default
+  showPage('home');
+});
+
+// --- BRANDING ---
+function setupBranding() {
+  if(SITE_CONFIG.logoImageURL && SITE_CONFIG.logoImageURL.trim() !== "") {
+    document.getElementById('dynamic-logo').src = SITE_CONFIG.logoImageURL;
+    document.getElementById('dynamic-logo').style.display = 'block';
+    document.getElementById('dynamic-logo-text').style.display = 'none';
+  }
+  document.getElementById('discord-join-btn').href = SITE_CONFIG.discordServerLink;
+}
+
+// --- DYNAMIC RENDERING ---
+function renderStats() {
+  const container = document.getElementById('dynamic-stats');
+  container.innerHTML = SITE_CONFIG.aboutStats.map(stat => `
+    <div class="stat-card">
+      <div class="stat-num">${stat.number}</div>
+      <div class="stat-label">${stat.label}</div>
+    </div>
+  `).join('');
+}
+
+function renderArtists() {
+  const container = document.getElementById('dynamic-artists');
+  if (!SITE_CONFIG.artists || SITE_CONFIG.artists.length === 0) {
+    container.innerHTML = `<div class="empty-state"><h3>No artists now, see you in future! 🚀</h3></div>`;
+    return;
+  }
+  container.innerHTML = SITE_CONFIG.artists.map(artist => `
+    <div class="artist-card">
+      <div class="artist-img" style="background-image: url('${artist.image}'); background-color: var(--nebula-purple);"></div>
+      <div class="artist-info">
+        <div class="artist-name">${artist.name}</div>
+        <span style="color:var(--nebula-cyan); font-size:0.7rem; text-transform:uppercase; letter-spacing:2px;">${artist.genre}</span>
+        <p style="color:rgba(240,230,255,0.6); font-size:0.85rem; margin-top:10px;">${artist.bio}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderCatalogue() {
+  const container = document.getElementById('dynamic-catalogue');
+  if (!SITE_CONFIG.catalogue || SITE_CONFIG.catalogue.length === 0) {
+    container.innerHTML = `<div class="empty-state"><h3>No releases now, see you in future! 💿</h3></div>`;
+    return;
+  }
+  container.innerHTML = SITE_CONFIG.catalogue.map(release => `
+    <a href="${release.link}" target="_blank" class="release-card">
+      <div class="release-art" style="background-image: url('${release.image}'); background-color: var(--nebula-dark);"></div>
+      <div class="release-info">
+        <div class="release-title">${release.title}</div>
+        <div style="color:var(--text-secondary); font-size:0.8rem;">${release.artist}</div>
+      </div>
+    </a>
+  `).join('');
+}
+
+// --- SPA ROUTER (SIMPLIFIED - NO URL CHANGES) ---
+function navigate(pageId) {
+  showPage(pageId);
+  
+  // Auto-close mobile menu if open
+  const navLinks = document.getElementById('navLinks');
+  if (navLinks) {
+    navLinks.classList.remove('open');
+  }
+}
+
+function showPage(pageId) {
+  // If user navigated to a path that doesn't exist, default to home
+  if(!document.getElementById('page-' + pageId)) pageId = 'home';
+  
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+  
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.dataset.page === pageId);
+  });
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// --- FORMSPREE & DISCORD TICKET LOGIC ---
+function setupDemoForm() {
+  const form = document.getElementById('demo-form');
+  const submitBtn = document.getElementById('demo-submit-btn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+    
+    // 1. Generate Random 8-character Ticket Code
+    const randomCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+    
+    // 2. Inject code into hidden field so Formspree emails it alongside demo info
+    document.getElementById('hidden-ticket-code').value = randomCode;
+    
+    submitBtn.textContent = "SENDING...";
+    submitBtn.style.opacity = "0.7";
+
+    // 3. Capture form data
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (response.ok) {
+        // 4. Show Discord Modal to user on success
+        document.getElementById('generated-code').textContent = randomCode;
+        document.getElementById('discord-modal').classList.add('active');
+        form.reset();
+      } else {
+        showNotification("⚠️ Oops! There was a problem submitting your form.");
+      }
+    } catch (error) {
+      showNotification("⚠️ Network error. Please try again.");
+    } finally {
+      submitBtn.textContent = "TRANSMIT DEMO →";
+      submitBtn.style.opacity = "1";
+    }
+  });
+}
+
+function closeModal() {
+  document.getElementById('discord-modal').classList.remove('active');
+}
+
+function showNotification(msg) {
+  const n = document.getElementById('notification');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 4000);
+}
+
+// --- UTILS ---
+function toggleNav() {
+  document.getElementById('navLinks').classList.toggle('open');
+}
+
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// --- CANVAS NEBULA BG ---
+const canvas = document.getElementById('nebula-bg');
+const ctx = canvas.getContext('2d');
+let stars = [], nebulaClouds =[];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+function initCanvasElements() {
+  stars =[];
+  for (let i = 0; i < 200; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.5,
+      speed: Math.random() * 0.005 + 0.001,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+  
+  nebulaClouds =[
+    { x: canvas.width * 0.2, y: canvas.height * 0.3, r: 400, c1: 'rgba(107,33,212,', c2: 'rgba(192,38,211,', a: 0.1, phase: 0, speed: 0.0005 },
+    { x: canvas.width * 0.8, y: canvas.height * 0.7, r: 350, c1: 'rgba(34,211,238,', c2: 'rgba(59,130,246,', a: 0.08, phase: 2, speed: 0.0004 }
+  ];
+}
+
+let time = 0;
+function drawCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background Gradient
+  const bg = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  bg.addColorStop(0, '#050510');
+  bg.addColorStop(0.5, '#080820');
+  bg.addColorStop(1, '#050510');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw Nebula
+  nebulaClouds.forEach(cloud => {
+    const pulse = Math.sin(time * cloud.speed * 1000 + cloud.phase) * 0.05;
+    const grad = ctx.createRadialGradient(
+      cloud.x + Math.sin(time * cloud.speed * 500) * 50,
+      cloud.y + Math.cos(time * cloud.speed * 700) * 30,
+      0,
+      cloud.x, cloud.y, cloud.r * (1 + pulse)
+    );
+    grad.addColorStop(0, cloud.c1 + (cloud.a * 1.5) + ')');
+    grad.addColorStop(0.5, cloud.c2 + cloud.a + ')');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cloud.x, cloud.y, cloud.r * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Draw Stars
+  stars.forEach(star => {
+    const twinkle = (Math.sin(time * star.speed * 1000 + star.phase) + 1) / 2;
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${twinkle * 0.8 + 0.1})`;
+    ctx.fill();
+  });
+
+  time += 0.016;
+  requestAnimationFrame(drawCanvas);
+}
+
+// Start Canvas
+window.addEventListener('resize', () => { resizeCanvas(); initCanvasElements(); });
+resizeCanvas();
+initCanvasElements();
+drawCanvas();
+</script>
+</body>
+</html>
